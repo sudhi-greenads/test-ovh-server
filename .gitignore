@@ -1,0 +1,5 @@
+# Ignore secret files
+*secret*
+*.secret
+secrets.yaml
+all-aws-secrets.yaml

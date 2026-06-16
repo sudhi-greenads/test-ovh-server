@@ -1,0 +1,200 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "admin.fullname" . }}
+  labels:
+    {{- include "admin.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "admin.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "admin.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "admin.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: PORT
+              value: "{{ .Values.env.port }}"
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: app-creds
+                  key: jwt_secret
+            - name: USER_ACCOUNT_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: useraccountdburl
+            - name: USER_ACCOUNT_DATABASE_RO
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: useraccountdburl
+            - name: CLOUD_API_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: cloudapidburl
+            - name: CLOUD_API_DATABASE_RO
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: cloudapidburl
+            - name: DIALOG_360_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: dialog360dburl
+            - name: DIALOG_360_DATABASE_RO
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: dialog360dburl
+            - name: RECEIVER_PROFILE_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: receiverprofiledburl
+            - name: ANALYTICS_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: analyticsdburl
+            - name: GUPSHUP_DATABASE_RO
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: gupshupdburl
+            - name: CAMPAIGN_DATABASE_RO
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: campaignmanagerdburl
+            - name: SUBSCRIPTION_DATABASE_RO
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: subscriptiondburl
+            - name: SUBSCRIPTION_DATABASEURL
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: subscriptiondburl
+            - name: ANALYTICS_DATABASE_RO
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: analyticsdburl
+            - name: ACCESS_TOKEN_EXPIRY
+              value: "{{ .Values.env.access_token_expiry }}"
+            - name: REFRESH_TOKEN_EXPIRTY
+              value: "{{ .Values.env.refresh_token_expiry }}"
+            - name: AMQP_SERVER_URL
+              valueFrom:
+                secretKeyRef:
+                  name: app-creds
+                  key: amqp_server_url
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: redisurl
+            - name: ATTEMPTS
+              value: "{{ .Values.env.attempts }}"
+            - name: MIN_DELAY
+              value: "{{ .Values.env.min_delay }}"
+            - name: TIMES_CONNECTED
+              value: "{{ .Values.env.times_connected }}"
+            - name: AWS_ARN
+              value: {{ .Values.env.s3_aws_arn }}
+            - name: AWS_BUCKET_NAME
+              value: {{ .Values.env.aws_bucket_name }}
+            - name: AWS_BUCKET_REGION
+              value: {{ .Values.env.aws_bucket_region }}
+            - name: AWS_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-creds
+                  key: aws_access_key
+            - name: AWS_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-creds
+                  key: aws_secret_key
+            - name: S3_FILE_BASE_URL
+              value: {{ .Values.env.s3_file_base_url }}
+            - name: RCS_ENABLED
+              value: "{{ .Values.env.rcs_enabled }}"
+            - name: GA_ANALYTICS_BASE_URL
+              value: {{ .Values.env.ga_analytics_base_url }}
+            - name: GA_USER_ACCOUNT_BASE_URL
+              value: {{ .Values.env.ga_user_account_base_url }}
+            - name: SUBSCRIPTION_VALIDITY_INTERVAL
+              value: "{{ .Values.env.subscription_validity_interval }}"
+            - name: MESSAGE_THRESHOLD_FOR_REPORT
+              value: "{{ .Values.env.message_threshold_for_report }}"
+            - name: GRAPH_BASE_URL
+              value: {{ .Values.env.graph_base_url }}
+            - name: GRAPH_TEMPLATE_END_URL
+              value: {{ .Values.env.graph_template_end_url }}
+            - name: BASE_360_URL
+              value: {{ .Values.env.base_360_url }}
+            - name: TEMPLATE_END_URL
+              value: {{ .Values.env.template_end_url }}
+            - name: DEFAULT_PLAN_ID_INR
+              value: "{{ .Values.env.default_plan_id_inr }}"
+            - name: DEFAULT_PLAN_ID_USD
+              value: "{{ .Values.env.default_plan_id_usd }}"
+            - name: INR_WALLET_AMOUNT
+              value: "{{ .Values.env.inr_wallet_amount }}"
+            - name: USD_WALLET_AMOUNT
+              value: "{{ .Values.env.usd_wallet_amount }}"
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          livenessProbe:
+            initialDelaySeconds: 30
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            initialDelaySeconds: 30
+            httpGet:
+              path: /
+              port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

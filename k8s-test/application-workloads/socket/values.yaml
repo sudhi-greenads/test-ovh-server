@@ -1,0 +1,115 @@
+# Default values for socket.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: registry.gitlab.com/greenads-global/ga-socket-service
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "v1.4.0"
+
+imagePullSecrets:
+  - name: "reg-creds-gitlab"
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+# fsGroup: 2000
+
+securityContext: {}
+# capabilities:
+#   drop:
+#   - ALL
+# readOnlyRootFilesystem: true
+# runAsNonRoot: true
+# runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 5010
+
+websocket:
+  port: 5011
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production
+    cert-manager.io/acme-challenge-type: http01
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+  hosts:
+    - host: onetest.telinfy.com
+      paths:
+        - path: /gass(/|$)(.*)
+          pathType: ImplementationSpecific
+          backend:
+            service: http
+  tls:
+    - secretName: onetest-cert-manager-certificate
+      hosts:
+        - onetest.telinfy.com
+
+ingresssocket:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production
+    cert-manager.io/acme-challenge-type: http01
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+  hosts:
+    - host: onetest.telinfy.com
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+          backend:
+            service: websocket
+  tls:
+    - secretName: onetest-cert-manager-certificate
+      hosts:
+        - onetest.telinfy.com
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 512Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+env:
+  port: 5010
+
+  # log flag
+  attempts: 5
+  min_delay: 3000
+  times_connected: 3
+  log_file_enabled: false
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

@@ -1,0 +1,187 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "user-account.fullname" . }}
+  labels:
+    {{- include "user-account.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "user-account.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "user-account.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "user-account.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: PORT
+              value: "{{ .Values.env.port }}"
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: app-creds
+                  key: jwt_secret
+            - name: DATABASEURL
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: useraccountdburl
+            - name: USER_ACCOUNT_DATABASE_RO
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: useraccountdburl
+            - name: CLOUD_API_DATABASE_RO
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: cloudapidburl
+            - name: GUPSHUP_DATABASE_RO
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: gupshupdburl
+            - name: TELINFY_ENT_DATABASE_RO
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: cloudapidburl
+            - name: SUBSCRIPTION_DATABASEURL
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: subscriptiondburl
+            - name: SUBSCRIPTION_DATABASEURL_RO
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: subscriptiondburl
+            - name: RCS_DATABASE_RO
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: rcsdburl
+            - name: ACCESS_TOKEN_EXPIRY
+              value: "{{ .Values.env.access_token_expiry }}"
+            - name: REFRESH_TOKEN_EXPIRTY
+              value: "{{ .Values.env.refresh_token_expiry }}"
+            - name: WEB_TOKEN_CACHE_EXPIRY_SECONDS
+              value: "{{ .Values.env.web_token_cache_expiry_seconds }}"
+            - name: MOBILE_TOKEN_CACHE_EXPIRY_SECONDS
+              value: "{{ .Values.env.mobile_token_cache_expiry_seconds }}"
+            - name: AMQP_SERVER_URL
+              valueFrom:
+                secretKeyRef:
+                  name: app-creds
+                  key: amqp_server_url
+            - name: EMAIL_SERVICE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: app-creds
+                  key: email_service_url
+            - name: EMAIL_SERVICE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: app-creds
+                  key: email_service_username
+            - name: EMAIL_SERVICE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-creds
+                  key: email_service_password
+            - name: GREENADS_EMAIL
+              value: {{ .Values.env.greenads_email }}
+            - name: CHRISTOPHER_EMAIL
+              value: {{ .Values.env.christopher_email }}
+            - name: GA_CLOUDAPI_INBOUND_SERVICE_BASE_URL
+              value: {{ .Values.env.ga_cloudapi_inbound_service_base_url }}
+            - name: GA_CLOUDAPI_INBOUND_SERVICE_ENT_BASE_URL
+              value: {{ .Values.env.ga_cloudapi_inbound_service_ent_base_url }}
+            - name: GA_CLOUDAPI_INBOUND_SERVICE_ENT_TEMPLATE_URL
+              value: {{ .Values.env.ga_cloudapi_inbound_service_ent_template_url }}
+            - name: GA_GUPSHUP_INBOUND_SERVICE_BASE_URL
+              value: {{ .Values.env.ga_gupshup_inbound_service_base_url }}
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: redisurl
+            - name: ATTEMPTS
+              value: "{{ .Values.env.attempts }}"
+            - name: MIN_DELAY
+              value: "{{ .Values.env.min_delay }}"
+            - name: TIMES_CONNECTED
+              value: "{{ .Values.env.times_connected }}"
+            - name: GUPSHUP_PARTNER_BASE_URL
+              value: {{ .Values.env.gupshup_partner_base_url }}
+            - name: GUPSHUP_PARTNER_TOKEN_END_URL
+              value: {{ .Values.env.gupshup_partner_token_end_url }}
+            - name: GUPSHUP_PARTNER_EMAIL
+              value: {{ .Values.env.gupshup_partner_email }}
+            - name: GUPSHUP_PARTNER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-creds
+                  key: gupshup_partner_password
+            - name: ENTERPRISE_ACCOUNTS
+              value: {{ .Values.env.enterprise_accounts }}
+            - name: DEFAULT_BASE_URL
+              value: {{ .Values.env.default_base_url }}
+            - name: LOG_FILE_ENABLED
+              value: "{{ .Values.env.log_file_enabled }}"
+            - name: INR_WALLET_AMOUNT
+              value: "{{ .Values.env.inr_wallet_balance }}"
+            - name: USD_WALLET_AMOUNT
+              value: "{{ .Values.env.usd_wallet_balance }}"
+            - name: DEFAULT_PLAN_ID
+              value: "{{ .Values.env.default_plan_id }}"
+            - name: FROM_MAIL
+              value: {{ .Values.env.from_mail }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          livenessProbe:
+            initialDelaySeconds: 30
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            initialDelaySeconds: 30
+            httpGet:
+              path: /
+              port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

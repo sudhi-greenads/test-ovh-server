@@ -1,0 +1,176 @@
+# Default values for gupshup.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 3
+
+image:
+  repository: registry.gitlab.com/greenads-global/ga-gupshup-service
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "v1.47.3"
+
+imagePullSecrets:
+  - name: "reg-creds-gitlab"
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+# fsGroup: 2000
+
+securityContext: {}
+# capabilities:
+#   drop:
+#   - ALL
+# readOnlyRootFilesystem: true
+# runAsNonRoot: true
+# runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 5026
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production
+    cert-manager.io/acme-challenge-type: http01
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+  hosts:
+    - host: onetest.telinfy.com
+      paths:
+        - path: /gagp(/|$)(.*)
+          pathType: ImplementationSpecific
+  tls:
+    - secretName: onetest-cert-manager-certificate
+      hosts:
+        - onetest.telinfy.com
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 512Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+env:
+  port: 5026
+  access_token_expiry: 3600
+  refresh_token_expiry: 15778476
+  # redis
+  attempts: 5
+  min_delay: 3000
+  times_connected: 3
+
+  campaign_message_sending_interval: 30
+
+  ga_user_account_base_url: http://telinfy-application-user-account.telinfy-application:5000
+  whatsapp_business_end_url: /whatsapp-business/find
+  get_user_end_url: /users
+  get_api_key_end_url: /users/api-key
+  get_all_users: /accounts/me/all/users
+
+  ga_receiver_profile_base_url: http://telinfy-application-receiver-profile.telinfy-application:5002
+
+  # Gupshup base url
+  gupshup_base_url: https://api.gupshup.io/wa/api/v1
+
+  # Gupshup sm base url
+  gupshup_sm_base_url: https://api.gupshup.io/sm/api/v1
+
+  # Gupshup template end url
+  gupshup_template_end_url: /template/list
+
+  # Gupshup single message end url
+  gupshup_template_message_end_url: /template/msg
+
+  # Gupshup single message end url
+  gupshup_direct_message_end_url: /msg
+
+  # ga-gupshup-inbound-service url
+  ga_gupshup_inbound_service_base_url: https://api.prod.telinfy.net/gwgp/
+
+  # Gupshup partner base url
+  gupshup_partner_base_url: https://partner.gupshup.io/partner
+
+  # gupshup partner token end url
+  gupshup_partner_token_end_url: /account/login
+
+  # gupshup partner app creation end url
+  gupshup_partner_app_creation_end_url: /app
+
+  # gupshup partner app generate signed link
+  gupshup_partner_app_signed_link_end_url: /onboarding/embed/link
+
+  # gupshup partner login credentials
+  gupshup_partner_email: midhun@greenadsglobal.com
+
+  #AWS s3 storage
+  aws_arn: arn:aws:s3:::telinfy.greenadsglobal.com
+  aws_bucket_name: "telinfy.greenadsglobal.com"
+  aws_bucket_region: "ap-south-1"
+
+  s3_file_base_url: https://s3.ap-south-1.amazonaws.com/telinfy.greenadsglobal.com
+
+  # Subscription service base url
+  ga_subscription_service_base_url: http://telinfy-application-subscription.telinfy-application:5033
+
+  # Subscription unit charge end url
+  subscription_unit_charge_end_url: /unitcharge
+
+  # kitchen treasures channel id
+  kitchen_treasures_channel_id: ca202f6e-7613-45e0-a102-3f81ca959451
+
+  # kitchen treasures rcs reply template name
+  kitchen_treasures_template_name: field_app_code
+
+  # kitchen treasures rcs message api details
+  kitchen_treasures_rcs_api_base_url: https://sapteleservices.com
+  kitchen_treasures_rcs_api_end_url: /SMS_API/sendsms.php
+  kitchen_treasures_rcs_api_username: intergrowbrands
+  kitchen_treasures_rcs_api_password: 12345
+  kitchen_treasures_rcs_api_sender_name: KTFOOD
+  kitchen_treasures_rcs_api_uc: U
+  kitchen_treasures_rcs_api_route_type: 1
+  kitchen_treasures_rcs_api_tid: 1007441448835007823
+  safg_channel_id: 077d369a-be87-4af5-9a04-470c2ddb17f1
+  safg_template_name: safg_10
+  safg_rcs_api_sender_name: SAFGPL
+  safg_rcs_api_route_type: 1
+  safg_rcs_api_tid: "1707173928113060722"
+  safg_rcs_api_key: b646b761-cf38-11ef-81ac-e29d2b69142c
+  graph_base_url: https://graph.facebook.com/v17.0
+
+  # log flag
+  log_file_enabled: false
+  agent_unassignment_cron: "*/10 * * * *"
+  agent_unassignment_reseller_id: 15
+  session_check_reseller_id: 15
+  template_creation_key: c64543014969e4303f74e109b10ebd13aa388500da0b297dbd8d107d720ad904
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

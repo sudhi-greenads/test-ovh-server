@@ -1,0 +1,116 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "s3-adapter.fullname" . }}
+  labels:
+    {{- include "s3-adapter.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "s3-adapter.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "s3-adapter.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "s3-adapter.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: PORT
+              value: "{{ .Values.env.port }}"
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: app-creds
+                  key: jwt_secret
+            - name: DATABASEURL
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: s3adapterdburl
+            - name: ACCESS_TOKEN_EXPIRY
+              value: "{{ .Values.env.access_token_expiry }}"
+            - name: REFRESH_TOKEN_EXPIRTY
+              value: "{{ .Values.env.refresh_token_expiry }}"
+            - name: AMQP_SERVER_URL
+              valueFrom:
+                secretKeyRef:
+                  name: app-creds
+                  key: amqp_server_url
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: redisurl
+            - name: ATTEMPTS
+              value: "{{ .Values.env.attempts }}"
+            - name: MIN_DELAY
+              value: "{{ .Values.env.min_delay }}"
+            - name: TIMES_CONNECTED
+              value: "{{ .Values.env.times_connected }}"
+            - name: AWS_BUCKET_NAME
+              value: {{ .Values.env.aws_bucket_name }}
+            - name: AWS_BUCKET_REGION
+              value: {{ .Values.env.aws_bucket_region }}
+            - name: AWS_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-creds
+                  key: aws_access_key
+            - name: AWS_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-creds
+                  key: aws_secret_key
+            - name: S3_FILE_BASE_URL
+              value: {{ .Values.env.s3_file_base_url }}
+            - name: S3_CHATBOT_FILE_BASE_URL
+              value: {{ .Values.env.s3_chatbot_file_base_url }}
+            - name: LOG_FILE_ENABLED
+              value: "{{ .Values.env.log_file_enabled }}"
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          livenessProbe:
+            initialDelaySeconds: 30
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            initialDelaySeconds: 30
+            httpGet:
+              path: /
+              port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

@@ -1,0 +1,121 @@
+# Default values for campaign.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: registry.gitlab.com/greenads-global/telinfy-campaign-service
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "v1.14.1"
+
+imagePullSecrets:
+  - name: "reg-creds-gitlab"
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext:
+  {}
+  # fsGroup: 2000
+
+securityContext:
+  {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production
+    cert-manager.io/acme-challenge-type: http01
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+  hosts:
+    - host: onetest.telinfy.com
+      paths:
+        - path: /gatc(/|$)(.*)
+          pathType: ImplementationSpecific
+  tls:
+    - secretName: onetest-cert-manager-certificate
+      hosts:
+        - onetest.telinfy.com
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 512Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+env:
+  # postgres credentials
+  port: 8080
+  postgres_user: app
+  postgres_db: campaign
+  payment_db: ga_subscription
+  postgres_host: 148.113.49.23
+  postgres_port: 5432
+  postgres_pool_size: 200
+
+  # queue shards
+  campaign_queue_shards: 2
+  status_queue_shards: 3
+
+  # batch size
+  message_batch_size: 2000
+  message_semaphore_size: 1000
+
+  message_batch_job_instances: 4
+  message_batch_job_sleep_time: 1.0
+  message_recovery_job_sleep_time: 1800.0
+
+  # campaign mail
+  from_mail: dev@telinfy.com
+  email_service_url: https://5ywz6g.api-in.infobip.com/email/3/send
+  email_service_username: Greenads_email
+  email_service_password: "@C@g2025612##"
+
+  account_ids_for_campaign_creation_mail_notification: "c99e3cc4-ce85-421b-8df4-ff3bc7472028,c3d9973c-ba49-4427-9044-d21fed9971aa,eb034627-52bf-4d65-aab5-8cebcf109cdc,5e035c7c-eb73-4bf2-b955-4c5dfc261e35,5bf5f56e-b33e-4079-af03-ba98a45cafd8,143cd6a9-0794-4d85-be0a-6088b3922bb9,11023607-d8ba-411b-8c78-3ea88ab3b972,d1f23dd6-22b4-46fc-93bd-20fe1d2abbfd,8bd214a1-e89a-47ab-8cf5-727bf97f39cc,13877ba7-7c68-427c-90ff-ed279e0ea478,07027eab-5f39-43a3-ac60-d6948ce3aa19,0ebb752d-f5ed-4131-953e-1a1964ba3066,21eae138-4e79-453c-92fe-dee5f4c192da,cb528165-ee5e-47b3-b6f6-01aa22dce06e,1e45f1a4-07fd-4512-b4f8-1c9146cadd0b,a096983b-d101-4c26-80df-8a207686b0e5,2461c6a3-0540-41fd-af88-df486e9b5c4c,d6f66200-21d9-4bd4-8411-6b5951bd485d,aeec89d4-f9f0-489f-9945-77d91d55d308,4027b3ed-6511-40d3-b5a5-a3f37636b50d,545be280-ea38-4565-ae45-cc23a4523176"
+
+  campaign_archive_job_sleep_time: 5
+
+  clear_status_log_batch_job_sleep_time: 300
+  clear_status_log_time_interval: 3
+
+  ga_user_account_base_url: http://telinfy-application-user-account.telinfy-application:5000
+  get_api_key_end_url: /users/api-key
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

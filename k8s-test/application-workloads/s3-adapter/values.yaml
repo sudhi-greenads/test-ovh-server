@@ -1,0 +1,104 @@
+# Default values for s3-adapter.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: registry.gitlab.com/greenads-global/ga-s3-adapter-service
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "v1.5.4"
+
+imagePullSecrets:
+  - name: "reg-creds-gitlab"
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+# fsGroup: 2000
+
+securityContext: {}
+# capabilities:
+#   drop:
+#   - ALL
+# readOnlyRootFilesystem: true
+# runAsNonRoot: true
+# runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 5009
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production
+    cert-manager.io/acme-challenge-type: http01
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+    nginx.org/proxy-connect-timeout: "30s"
+    nginx.org/proxy-read-timeout: "30s"
+    nginx.org/proxy-send-timeout: "30s"
+  hosts:
+    - host: onetest.telinfy.com
+      paths:
+        - path: /gams(/|$)(.*)
+          pathType: ImplementationSpecific
+  tls:
+    - secretName: onetest-cert-manager-certificate
+      hosts:
+        - onetest.telinfy.com
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 512Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+env:
+  port: 5009
+  access_token_expiry: 3600
+  refresh_token_expiry: 15778476
+  # redis
+  attempts: 5
+  min_delay: 3000
+  times_connected: 3
+
+  aws_arn: arn:aws:s3:::telinfy.greenadsglobal.com
+  aws_bucket_name: telinfy.greenadsglobal.com
+  aws_bucket_region: ap-south-1
+  s3_file_base_url: https://s3.ap-south-1.amazonaws.com/telinfy.greenadsglobal.com/public
+
+  s3_chatbot_file_base_url: https://s3.ap-south-1.amazonaws.com/telinfy.greenadsglobal.com/chat-bot
+
+  # log flag
+  log_file_enabled: false
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

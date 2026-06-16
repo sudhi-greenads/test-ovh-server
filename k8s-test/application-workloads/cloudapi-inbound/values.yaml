@@ -1,0 +1,153 @@
+# Default values for cloudapi-inbound.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 2
+
+image:
+  repository: registry.gitlab.com/greenads-global/ga-cloudapi-inbound-service
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "v2.34.1"
+
+imagePullSecrets:
+  - name: "reg-creds-gitlab"
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+# fsGroup: 2000
+
+securityContext: {}
+# capabilities:
+#   drop:
+#   - ALL
+# readOnlyRootFilesystem: true
+# runAsNonRoot: true
+# runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 5005
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production
+    cert-manager.io/acme-challenge-type: http01
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+  hosts:
+    - host: onetest.telinfy.com
+      paths:
+        - path: /gwis(/|$)(.*)
+          pathType: ImplementationSpecific
+  tls:
+    - secretName: onetest-cert-manager-certificate
+      hosts:
+        - onetest.telinfy.com
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 512Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+env:
+  port: 5005
+  access_token_expiry: 3600
+  refresh_token_expiry: 15778476
+  # redis
+  attempts: 5
+  min_delay: 3000
+  times_connected: 3
+
+  campaign_message_sending_interval: 30
+
+  ga_user_account_base_url: http://telinfy-application-user-account.telinfy-application:5000
+  whatsapp_business_end_url: /whatsapp-business/find
+  get_user_end_url: /users
+
+  ga_s3_adapter_base_url: http://telinfy-application-s3-adapter.telinfy-application:5009
+  media_download_end_url: /adapter/s3/whatsapp-media/save
+
+  ga_receiver_profile_base_url: http://telinfy-application-receiver-profile.telinfy-application:5002
+  get_contact_end_url: /contact
+  get_customer_blocked_contacts_end_url: /contacts/customer-blocked
+
+  graph_base_url: https://graph.facebook.com/v15.0
+  graph_message_end_url: /messages
+  graph_template_end_url: /message_templates
+  graph_phone_number_end_url: /phone_numbers
+
+  firebase_token_threshold_in_days: 60
+
+  chatbot_session_expiry_time_in_sec: 300
+  chatbot_session_expiry_time_in_ms: 300000
+
+  ga_cloudapi_service_base_url: http://telinfy-application-cloudapi.telinfy-application:5014
+  send_template_notification_url: /whatsapp/templates/notify
+
+  intrcity_whatsapp_business_id: 46c9410b-c345-4e86-ae3b-9281045f3d75
+
+  ## Agent notify template
+  exam_winner_whatsapp_business_id: 891dc6d7-ff10-46b4-b9bb-f0850ff8b4fa
+  conversation_assigned_template_name: lead_assign_notification
+  conversation_assigned_template_language: en
+
+  # Chatbot Transalations
+  bot_translation_ml: "71c4c604-d876-41aa-a998-0d49013ae2fa,9f2357a2-a8ee-440e-89c8-21ac1a960cc6"
+
+  # Favourite Homes whatsAppBusinessId
+  favourite_homes_whatsapp_business_id: 9913c98a-f80b-48e0-adc6-68741171ae6f
+
+  # Modern Vet notifications
+  modern_vet_whatsapp_business_account: "c775bae2-e214-4aa6-a0b1-7cd7ec4b5cb4"
+  modern_vet_book_now_keywords: "modernvet-book-appointment-yes"
+  modern_vet_support_alert_keywords: "modernvet-appointment-already-vaccinated-reason-2"
+  modern_vet_client_phone_numbers: "+971502447940,+971551032202"
+  modern_vet_notify_template_name: contact_support
+  modern_vet_notify_template_language: en
+
+  favourite_homes_channel_id: 9913c98a-f80b-48e0-adc6-68741171ae6f
+  favourite_homes_header_cookie: ASP.NET_SessionId=eptyz345h30uiqe05l4im2nl
+
+  instance_namespace: telinfy-cloud-main
+
+  campaign_status_fetch_interval: 3
+  google_sheets_receive_prefetch: 20
+
+  # log flag
+  log_file_enabled: false
+
+  inbound_receive_prefetch: 100
+
+  verify_token: 1rbfPLXOc6fmvDz
+  centresquare_account_id: 2b6fd46a-d832-4205-a94f-de76b156853d
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

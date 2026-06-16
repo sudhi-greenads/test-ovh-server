@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: telinfy-application-gupshup-inbound
+  namespace: telinfy-argo
+spec:
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: telinfy-application
+  source:
+    repoURL: https://github.com/sudhi-greenads/test-ovh-server.git
+    path: k8s-test/application-workloads/gupshup-inbound
+    targetRevision: main
+    helm:
+      valueFiles:
+        - values.yaml
+  project: telinfy
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+

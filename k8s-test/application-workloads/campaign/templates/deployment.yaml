@@ -1,0 +1,132 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "campaign.fullname" . }}
+  labels:
+    {{- include "campaign.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "campaign.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "campaign.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "campaign.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: PORT
+              value: "{{ .Values.env.port }}"
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: app-creds
+                  key: jwt_secret
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: postgres_password
+            - name: AMQP_SERVER_URL
+              valueFrom:
+                secretKeyRef:
+                  name: app-creds
+                  key: amqp_server_url
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: redisurl
+            - name: POSTGRES_USER
+              value: "{{ .Values.env.postgres_user }}"
+            - name: POSTGRES_DB
+              value: "{{ .Values.env.postgres_db }}"
+            - name: PAYMENT_DB
+              value: "{{ .Values.env.payment_db }}"
+            - name: POSTGRES_HOST
+              value: "{{ .Values.env.postgres_host }}"
+            - name: POSTGRES_PORT
+              value: "{{ .Values.env.postgres_port }}"
+            - name: POSTGRES_POOL_SIZE
+              value: "{{ .Values.env.postgres_pool_size }}"
+            - name: CAMPAIGN_QUEUE_SHARDS
+              value: "{{ .Values.env.campaign_queue_shards }}"
+            - name: STATUS_QUEUE_SHARDS
+              value: "{{ .Values.env.status_queue_shards }}"
+            - name: MESSAGE_BATCH_SIZE
+              value: "{{ .Values.env.message_batch_size }}"
+            - name: MESSAGE_SEMAPHORE_SIZE
+              value: "{{ .Values.env.message_semaphore_size }}"
+            - name: MESSAGE_BATCH_JOB_INSTANCES
+              value: "{{ .Values.env.message_batch_job_instances }}"
+            - name: MESSAGE_BATCH_JOB_SLEEP_TIME
+              value: "{{ .Values.env.message_batch_job_sleep_time }}"
+            - name: MESSAGE_RECOVERY_JOB_SLEEP_TIME
+              value: "{{ .Values.env.message_recovery_job_sleep_time }}"
+            - name: FROM_MAIL
+              value: "{{ .Values.env.from_mail }}"
+            - name: EMAIL_SERVICE_URL
+              value: {{ .Values.env.email_service_url }}
+            - name: EMAIL_SERVICE_USERNAME
+              value: "{{ .Values.env.email_service_username }}"
+            - name: EMAIL_SERVICE_PASSWORD
+              value: "{{ .Values.env.email_service_password }}"
+            - name: ACCOUNT_IDS_FOR_CAMPAIGN_CREATION_MAIL_NOTIFICATION
+              value: {{ .Values.env.account_ids_for_campaign_creation_mail_notification }}
+            - name: CAMPAIGN_ARCHIVE_JOB_SLEEP_TIME
+              value: "{{ .Values.env.campaign_archive_job_sleep_time }}"
+            - name: CLEAR_STATUS_LOG_BATCH_JOB_SLEEP_TIME
+              value: "{{ .Values.env.clear_status_log_batch_job_sleep_time }}"
+            - name: CLEAR_STATUS_LOG_TIME_INTERVAL
+              value: "{{ .Values.env.clear_status_log_time_interval }}"
+            - name: GA_USER_ACCOUNT_BASE_URL
+              value: "{{ .Values.env.ga_user_account_base_url }}"
+            - name: GET_API_KEY_END_URL
+              value: "{{ .Values.env.get_api_key_end_url }}"
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          livenessProbe:
+            initialDelaySeconds: 30
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            initialDelaySeconds: 30
+            httpGet:
+              path: /
+              port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

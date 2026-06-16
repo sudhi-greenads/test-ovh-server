@@ -1,0 +1,249 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "gupshup-inbound.fullname" . }}
+  labels:
+    {{- include "gupshup-inbound.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "gupshup-inbound.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "gupshup-inbound.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "gupshup-inbound.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: PORT
+              value: "{{ .Values.env.port }}"
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: app-creds
+                  key: jwt_secret
+            - name: DATABASEURL
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: gupshupdburl
+            - name: USER_RO_DATABASEURL
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: useraccountdburl
+            - name: SUBSCRIPTION_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: subscriptiondburl
+            - name: SUBSCRIPTION_DATABASE_RO
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: subscriptiondburl
+            - name: CAMPAIGN_DATABASE_RO
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: campaignmanagerdburl
+            - name: TELINFY_CAMPAIGN_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: telinfycampaigndburl
+            - name: ACCESS_TOKEN_EXPIRY
+              value: "{{ .Values.env.access_token_expiry }}"
+            - name: REFRESH_TOKEN_EXPIRTY
+              value: "{{ .Values.env.refresh_token_expiry }}"
+            - name: AMQP_SERVER_URL
+              valueFrom:
+                secretKeyRef:
+                  name: app-creds
+                  key: amqp_server_url
+            - name: CAMPAIGN_MESSAGE_SENDING_INTERVAL
+              value: "{{ .Values.env.campaign_message_sending_interval }}"
+            - name: GA_USER_ACCOUNT_BASE_URL
+              value: {{ .Values.env.ga_user_account_base_url }}
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: redisurl
+            - name: ATTEMPTS
+              value: "{{ .Values.env.attempts }}"
+            - name: MIN_DELAY
+              value: "{{ .Values.env.min_delay }}"
+            - name: TIMES_CONNECTED
+              value: "{{ .Values.env.times_connected }}"
+            - name: WHATSAPP_BUSINESS_END_URL
+              value: {{ .Values.env.whatsapp_business_end_url }}
+            - name: GET_USER_END_URL
+              value: {{ .Values.env.get_user_end_url }}
+            - name: GET_CONTACT_END_URL
+              value: {{ .Values.env.get_contact_end_url }}
+            - name: GA_S3_ADAPTER_BASE_URL
+              value: {{ .Values.env.ga_s3_adapter_base_url }}
+            - name: MEDIA_DOWNLOAD_END_URL
+              value: {{ .Values.env.media_download_end_url }}
+            - name: GA_RECEIVER_PROFILE_BASE_URL
+              value: {{ .Values.env.ga_receiver_profile_base_url }}
+            - name: GET_CUSTOMER_BLOCKED_CONTACTS_END_URL
+              value: {{ .Values.env.get_customer_blocked_contacts_end_url }}
+            - name: FIREBASE_TOKEN_THRESHOLD_IN_DAYS
+              value: "{{ .Values.env.firebase_token_threshold_in_days }}"
+            - name: FCM_SERVER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-creds
+                  key: fcm_server_key
+            - name: GA_CLOUDAPI_SERVICE_BASE_URL
+              value: {{ .Values.env.ga_cloudapi_service_base_url }}
+            - name: SEND_TEMPLATE_NOTIFICATION_URL
+              value: {{ .Values.env.send_template_notification_url }}
+            - name: GUPSHUP_BASE_URL
+              value: {{ .Values.env.gupshup_base_url }}
+            - name: GUPSHUP_DIRECT_MESSAGE_END_URL
+              value: {{ .Values.env.gupshup_direct_message_end_url }}
+            - name: INBOUND_RECEIVE_PREFETCH
+              value: "{{ .Values.env.inbound_receive_prefetch }}"
+            - name: PARTNER_WEBHOOK_RECEIVE_PREFETCH
+              value: "{{ .Values.env.partner_webhook_receive_prefetch }}"
+            - name: SAVE_INBOUND_MESSAGE_RECEIVE_PREFETCH
+              value: "{{ .Values.env.save_inbound_message_receive_prefetch }}"
+            - name: SAVE_INBOUND_STATUS_RECEIVE_PREFETCH
+              value: "{{ .Values.env.save_inbound_status_receive_prefetch }}"
+            - name: SAVE_INBOUND_BILLING_RECEIVE_PREFETCH
+              value: "{{ .Values.env.save_inbound_billing_receive_prefetch }}"
+            - name: CHANNEL_PREFETCH
+              value: "{{ .Values.env.channel_prefetch }}"
+            - name: GOOGLE_SHEETS_RECEIVE_PREFETCH
+              value: "{{ .Values.env.google_sheets_receive_prefetch }}"
+            - name: FORMATTED_WEBHOOK_STATUS_UPDATES_CHANNEL_IDS
+              value: {{ .Values.env.formatted_webhook_status_updates_channel_ids }}
+            - name: KITCHEN_TREASURES_CHANNEL_ID
+              value: {{ .Values.env.kitchen_treasures_channel_id }}
+            - name: KITCHEN_TREASURES_TEMPLATE_NAME
+              value: {{ .Values.env.kitchen_treasures_template_name }}
+            - name: KITCHEN_TREASURES_RCS_API_BASE_URL
+              value: {{ .Values.env.kitchen_treasures_rcs_api_base_url }}
+            - name: KITCHEN_TREASURES_RCS_API_END_URL
+              value: {{ .Values.env.kitchen_treasures_rcs_api_end_url }}
+            - name: KITCHEN_TREASURES_RCS_API_USERNAME
+              value: {{ .Values.env.kitchen_treasures_rcs_api_username }}
+            - name: KITCHEN_TREASURES_RCS_API_PASSWORD
+              value: "{{ .Values.env.kitchen_treasures_rcs_api_password }}"
+            - name: KITCHEN_TREASURES_RCS_API_SENDER_NAME
+              value: {{ .Values.env.kitchen_treasures_rcs_api_sender_name }}
+            - name: KITCHEN_TREASURES_RCS_API_UC
+              value: {{ .Values.env.kitchen_treasures_rcs_api_uc }}
+            - name: KITCHEN_TREASURES_RCS_API_ROUTE_TYPE
+              value: "{{ .Values.env.kitchen_treasures_rcs_api_route_type }}"
+            - name: KITCHEN_TREASURES_RCS_API_TID
+              value: "{{ .Values.env.kitchen_treasures_rcs_api_tid }}"
+            - name: CAMPAIGN_STATUS_FETCH_INTERVAL
+              value: "{{ .Values.env.campaign_status_fetch_interval }}"
+            - name: FUTUREACE_CHANNEL_ID
+              value: {{ .Values.env.futureace_channel_id }}
+            - name: FUTUREACE_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-creds
+                  key: futureace_api_key
+            - name: LOG_FILE_ENABLED
+              value: "{{ .Values.env.log_file_enabled }}"
+            - name: BHIMA_WHATSAPP_BUSINESS_ID
+              value: "{{ .Values.env.bhima_whatsapp_business_id }}"
+            - name: BHIMA_SANDBOX_WHATSAPP_BUSINESS_ID
+              value: "{{ .Values.env.bhima_sandbox_whatsapp_business_id }}"
+            - name: AUTH_URL
+              value: {{ .Values.env.auth_url }}
+            - name: AUTH_ENDPOINT
+              value: {{ .Values.env.auth_endpoint }}
+            - name: TENANT_ID
+              value: {{ .Values.env.tenant_id }}
+            - name: GRANT_TYPE
+              value: {{ .Values.env.grant_type }}
+            - name: BHIMA_PARTNER_CLIENT_ID_SANDBOX
+              value: {{ .Values.env.bhima_partner_client_id_sandbox }}
+            - name: BHIMA_PARTNER_CLIENT_ID_PRODUCTION
+              value: {{ .Values.env.bhima_partner_client_id_production }}
+            - name: BHIMA_PARTNER_CLIENT_SECRET_SANDBOX
+              value: {{ .Values.env.bhima_partner_client_secret_sandbox }}
+            - name: BHIMA_PARTNER_CLIENT_SECRET_PRODUCTION
+              value: {{ .Values.env.bhima_partner_client_secret_production }}
+            - name: BHIMA_PARTNER_RESOURCE_PRODUCTION
+              value: {{ .Values.env.bhima_partner_resource_production }}
+            - name: BHIMA_PARTNER_RESOURCE_SANDBOX
+              value: {{ .Values.env.bhima_partner_resource_sandbox }}
+            - name: SAFG_CHANNEL_ID
+              value: {{ .Values.env.safg_channel_id }}
+            - name: SAFG_TEMPLATE_NAME
+              value: {{ .Values.env.safg_template_name }}
+            - name: SAFG_RCS_API_KEY
+              value: "{{ .Values.env.safg_rcs_api_key }}"
+            - name: SAFG_RCS_API_SENDER_NAME
+              value: {{ .Values.env.safg_rcs_api_sender_name }}
+            - name: SAFG_RCS_API_ROUTE_TYPE
+              value: "{{ .Values.env.safg_rcs_api_route_type }}"
+            - name: SAFG_RCS_API_TID
+              value: "{{ .Values.env.safg_rcs_api_tid }}"
+            - name: RABBITMQ_CONNECTION_POOL_SIZE
+              value: "{{ .Values.env.rabbitmq_connection_pool_size }}"
+            - name: RABBITMQ_CHANNEL_POOL_SIZE
+              value: "{{ .Values.env.rabbitmq_channel_pool_size }}"
+            - name: CUSTOM_BUTTON_REPLY_INSPIRE_CHANNEL_ID
+              value: "{{ .Values.env.custom_button_reply_inspire_channel_id }}"
+            - name: FAZIYO_CHATBOT_TRIGGER_KEYWORD
+              value: "{{ .Values.env.faziyo_chatbot_trigger_keyword }}"
+            - name: FAZIYO_EXTERNAL_API_CHANNEL_ID
+              value: "{{ .Values.env.faziyo_external_api_channel_id }}"
+            - name: LIVE_AGENT_WHATSAPP_BUSINESS_IDS
+              value: "{{ .Values.env.live_agent_whatsapp_business_ids }}"
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          livenessProbe:
+            initialDelaySeconds: 30
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            initialDelaySeconds: 30
+            httpGet:
+              path: /
+              port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

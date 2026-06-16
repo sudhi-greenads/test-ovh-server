@@ -1,0 +1,222 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "subscription.fullname" . }}
+  labels:
+    {{- include "subscription.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "subscription.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "subscription.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "subscription.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: PORT
+              value: "{{ .Values.env.port }}"
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: app-creds
+                  key: jwt_secret
+            - name: DATABASEURL
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: subscriptiondburl
+            - name: DATABASEURL_RO
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: subscriptiondburl
+            - name: CLOUD_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: cloudapidburl
+            - name: CLOUD_DATABASE_RO
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: cloudapidburl
+            - name: USER_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: useraccountdburl
+            - name: USER_DATABASE_RO
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: useraccountdburl
+            - name: CAMPAIGN_DATABASE_RO
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: campaignmanagerdburl
+            - name: GUPSHUP_DATABASE_RO
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: gupshupdburl
+            - name: RAZOR_PAY_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: app-creds
+                  key: razor_pay_key_id
+            - name: RAZOR_PAY_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-creds
+                  key: razor_pay_secret_key
+            - name: EMAIL_SERVICE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: app-creds
+                  key: email_service_username
+            - name: EMAIL_SERVICE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-creds
+                  key: email_service_password
+            - name: ACCESS_TOKEN_EXPIRY
+              value: "{{ .Values.env.access_token_expiry }}"
+            - name: REFRESH_TOKEN_EXPIRTY
+              value: "{{ .Values.env.refresh_token_expiry }}"
+            - name: AMQP_SERVER_URL
+              valueFrom:
+                secretKeyRef:
+                  name: app-creds
+                  key: amqp_server_url
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: redisurl
+            - name: ATTEMPTS
+              value: "{{ .Values.env.attempts }}"
+            - name: MIN_DELAY
+              value: "{{ .Values.env.min_delay }}"
+            - name: TIMES_CONNECTED
+              value: "{{ .Values.env.times_connected }}"
+            - name: AWS_ARN
+              value: {{ .Values.env.s3_aws_arn }}
+            - name: AWS_BUCKET_NAME
+              value: {{ .Values.env.aws_bucket_name }}
+            - name: AWS_BUCKET_REGION
+              value: {{ .Values.env.aws_bucket_region }}
+            - name: AWS_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-creds
+                  key: aws_access_key
+            - name: AWS_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-creds
+                  key: aws_secret_key
+            - name: S3_FILE_BASE_URL
+              value: {{ .Values.env.s3_file_base_url }}
+            
+            - name: GA_USER_ACCOUNT_BASE_URL
+              value: {{ .Values.env.ga_user_account_base_url }}
+            - name: WHATSAPP_BUSINESS_END_URL
+              value: {{ .Values.env.whatsapp_business_end_url }}
+            - name: GET_USER_END_URL
+              value: {{ .Values.env.get_user_end_url }}
+            - name: GET_API_KEY_END_URL
+              value: {{ .Values.env.get_api_key_end_url }}
+            - name: GA_S3_ADAPTER_BASE_URL
+              value: {{ .Values.env.ga_s3_adapter_base_url }}
+            - name: MEDIA_DOWNLOAD_END_URL
+              value: {{ .Values.env.media_download_end_url }}
+            - name: CUSTOM_0_30_CONVERSATION_MESSAGE_CHARGE
+              value: "{{ .Values.env.custom_0_30_conversation_message_charge }}"
+            - name: CUSTOM_0_34_CONVERSATION_MESSAGE_CHARGE
+              value: "{{ .Values.env.custom_0_34_conversation_message_charge }}"
+            - name: CUSTOM_0_35_CONVERSATION_MESSAGE_CHARGE
+              value: "{{ .Values.env.custom_0_35_conversation_message_charge }}"
+            - name: CUSTOM_0_40_CONVERSATION_MESSAGE_CHARGE
+              value: "{{ .Values.env.custom_0_40_conversation_message_charge }}"
+            - name: CUSTOM_1_CONVERSATION_MESSAGE_CHARGE
+              value: "{{ .Values.env.custom_1_conversation_message_charge }}"
+            - name: SUBSCRIPTION_SCHEDULE_CRON
+              value: "{{ .Values.env.subscription_schedule_cron }}"
+            - name: RECONCILIATION_SCHEDULE_CRON
+              value: "{{ .Values.env.reconciliation_schedule_cron }}"
+            - name: INR_WALLET_AMOUNT
+              value: "{{ .Values.env.inr_wallet_amount }}"
+            - name: USD_WALLET_AMOUNT
+              value: "{{ .Values.env.usd_wallet_amount }}"
+            - name: GUPSHUP_PARTNER_BASE_URL
+              value: {{ .Values.env.gupshup_partner_base_url }}
+            - name: CURRENCY_CONVERSION_PERCENTAGE
+              value: "{{ .Values.env.currency_conversion_percentage }}"
+            - name: LOG_FILE_ENABLED
+              value: "{{ .Values.env.log_file_enabled }}"
+            - name: CAMPAIGN_REFUND_PREFETCH
+              value: "{{ .Values.env.campaign_refund_prefetch }}"
+            - name: CONVERSATION_REFUND_PREFETCH
+              value: "{{ .Values.env.conversation_refund_prefetch }}"
+            - name: EMAIL_SERVICE_URL
+              value: "{{ .Values.env.email_service_url }}"
+            - name: FROM_MAIL
+              value: "{{ .Values.env.from_mail }}"
+            - name: WALLET_RECHARGE_EXECUTE_PREFETCH
+              value: "{{ .Values.env.wallet_recharge_execute_prefetch }}"
+            - name: SUBSCRIPTION_RECHARGE_EXECUTE_PREFETCH
+              value: "{{ .Values.env.subscription_recharge_execute_prefetch }}"
+            - name: SUBSCRIPTION_EXPIRY_CHECK_CRON
+              value: "{{ .Values.env.subscription_expiry_check_cron }}"
+            - name: NOTIFY_EXPIRING_SUBSCRIPTIONS_CRON
+              value: "{{ .Values.env.notify_expiring_subscriptions_cron }}"
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          livenessProbe:
+            initialDelaySeconds: 30
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            initialDelaySeconds: 30
+            httpGet:
+              path: /
+              port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

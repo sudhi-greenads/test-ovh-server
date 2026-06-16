@@ -1,0 +1,128 @@
+# Default values for admin.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: registry.gitlab.com/greenads-global/ga-admin-service
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "v1.11.3"
+
+imagePullSecrets:
+  - name: "reg-creds-gitlab"
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+# fsGroup: 2000
+
+securityContext: {}
+# capabilities:
+#   drop:
+#   - ALL
+# readOnlyRootFilesystem: true
+# runAsNonRoot: true
+# runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 5015
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production
+    cert-manager.io/acme-challenge-type: http01
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+  hosts:
+    - host: onetest.telinfy.com
+      paths:
+        - path: /gadm(/|$)(.*)
+          pathType: ImplementationSpecific
+  tls:
+    - secretName: onetest-cert-manager-certificate
+      hosts:
+        - onetest.telinfy.com
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 512Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+env:
+  port: 5015
+  access_token_expiry: 3600
+  refresh_token_expiry: 15778476
+
+  # redis
+  attempts: 5
+  min_delay: 3000
+  times_connected: 3
+
+  #analytics service
+  ga_analytics_base_url: http://telinfy-application-analytics.telinfy-application:5007 # change
+
+  #user account service
+  ga_user_account_base_url: http://telinfy-application-user-account.telinfy-application:5000 # change
+
+  #subscription cron interval in hours
+  subscription_validity_interval: 12
+
+  #aws s3 storage
+  s3_aws_arn: arn:aws:s3:::telinfy.greenadsglobal.com
+  aws_bucket_name: telinfy.greenadsglobal.com
+  aws_bucket_region: ap-south-1
+  s3_file_base_url: https://s3.ap-south-1.amazonaws.com/telinfy.greenadsglobal.com/reports
+
+  # rcs enabled
+  rcs_enabled: false
+
+  # message count
+  message_threshold_for_report: 100
+
+  #facebook graph api base url
+  graph_base_url: https://graph.facebook.com/v15.0
+  #facebook template end url
+  graph_template_end_url: /message_templates
+
+  #dialog360 base url
+  base_360_url: https://waba.360dialog.io
+  #dialog360 template end url
+  template_end_url: v1/configs/templates
+
+  default_plan_id_inr: 283
+  default_plan_id_usd: 284
+  inr_wallet_amount: 10
+  usd_wallet_amount: 3
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

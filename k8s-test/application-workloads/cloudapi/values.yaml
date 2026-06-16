@@ -1,0 +1,165 @@
+# Default values for cloudapi.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 3
+
+image:
+  repository: registry.gitlab.com/greenads-global/ga-cloudapi-service
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "v2.42.2"
+
+imagePullSecrets:
+  - name: "reg-creds-gitlab"
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+# fsGroup: 2000
+
+securityContext: {}
+# capabilities:
+#   drop:
+#   - ALL
+# readOnlyRootFilesystem: true
+# runAsNonRoot: true
+# runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 5014
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production
+    cert-manager.io/acme-challenge-type: http01
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+  hosts:
+    - host: onetest.telinfy.com
+      paths:
+        - path: /gaca(/|$)(.*)
+          pathType: ImplementationSpecific
+  tls:
+    - secretName: onetest-cert-manager-certificate
+      hosts:
+        - onetest.telinfy.com
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 512Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+env:
+  port: 5014
+  access_token_expiry: 3600
+  refresh_token_expiry: 15778476
+  # redis
+  attempts: 5
+  min_delay: 3000
+  times_connected: 3
+
+  campaign_message_sending_interval: 30
+
+  ga_user_account_base_url: http://telinfy-application-user-account.telinfy-application:5000
+  whatsapp_business_end_url: /whatsapp-business/find
+  get_user_end_url: /users
+  get_api_key_end_url: /users/api-key
+  get_all_users: /accounts/me/all/users
+
+  ga_s3_adapter_base_url: http://telinfy-application-s3-adapter.telinfy-application:5009
+  media_download_end_url: /adapter/s3/whatsapp-media/save
+
+  ga_cloudapi_inbound_service_base_url: https://api.prod.telinfy.net/gwis/
+
+  ga_receiver_profile_base_url: http://telinfy-application-receiver-profile.telinfy-application:5002
+
+  graph_base_url: https://graph.facebook.com/v24.0
+  graph_base_url_without_api_version: https://graph.facebook.com/
+  graph_message_end_url: /messages
+  graph_template_end_url: /message_templates
+  graph_phone_number_end_url: /phone_numbers
+  graph_commerce_end_url: /whatsapp_commerce_settings
+  graph_marketing_message_end_url: /marketing_messages
+
+  chatbot_session_expiry_time: 3600
+
+  intrcity_whatsapp_business_id: 46c9410b-c345-4e86-ae3b-9281045f3d75
+
+  s3_aws_arn: arn:aws:s3:::telinfy.greenadsglobal.com
+  aws_bucket_name: telinfy.greenadsglobal.com
+  aws_bucket_region: ap-south-1
+  s3_file_base_url: https://s3.ap-south-1.amazonaws.com/telinfy.greenadsglobal.com
+
+  instance_namespace: telinfy-cloud-main
+
+  # log flag
+  log_file_enabled: false
+
+  graph_system_user_access_token: EAARdZBD3gktEBPW1tWJt6bB5rWZAuZAuSefZA9ZCRpGPXCLAZBebAD5s5ETV5g0lrLoOU9tDvm22WOmmSTMXwsSDhBQZAKe7ZCFevdnGXJvxNhWAvjGToLA8f94WzqZC5lidwmVrrN7u1etG4D2QBSw86dlzZBJRxhsRlkPAZCtkGmziicO9X9ElHCiiqkShBsDwwZDZD
+
+  client_id: "1229220678243025"
+
+  client_secret: f3e258f7efaf7b1d8be76eaacb770f23
+
+  pinnacle_api_key: 0c0f4444-1f68-11f0-8cb4-02c8a5e042bd
+
+  pinnacle_base_url: https://consolev1.pinbot.ai/
+
+  pinnacle_credit_line_endpoint: /api/client-embedded-detail-receiver
+  pinnacle_apply_creditline_endpoint: api/join-solutions-share-creditline-api
+
+  ga_subscription_base_url: http://telinfy-application-subscription.telinfy-application:5033
+
+  subscription_unit_charge_end_url: /unitcharge
+
+  pinnacle_embedded_signup_config_id: "476357068210490"
+  pinnacle_business_id: "189682205373852"
+  pinnacle_solution_id: "1022512139809350"
+
+  graph_user_id: "672196051884471"
+  agent_unassignment_cron: "*/10 * * * *"
+  agent_unassignment_reseller_id: 15
+  session_check_reseller_id: 15
+  from_mail: dev@telinfy.com
+
+  #TATA embedded signup
+  kaleyra_base_url: https://api.kaleyra.io
+  kaleyra_api_key: A51772cdae79d7d7d25420392cbd66d29
+  kaleyra_solution_id: "1821051301840801"
+  kaleyra_bm_id: "189682205373852"
+  kaleyra_whatsapp_business_account_Id: "1090990471055566"
+  template_creation_key: c64543014969e4303f74e109b10ebd13aa388500da0b297dbd8d107d720ad904
+
+  template_message_queue_account_id: "2b6fd46a-d832-4205-a94f-de76b156853d"
+  template_message_queue_prefetch_count: 10
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

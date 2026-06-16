@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: telinfy-middleware-ingress-nginx
+  namespace: telinfy-argo
+spec:
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: telinfy-middleware
+  source:
+    repoURL: https://github.com/sudhi-greenads/test-ovh-server.git
+    path: k8s-test/middleware-workloads/ingress-nginx
+    targetRevision: main
+    helm:
+      valueFiles:
+        - telinfy-ingress-nginx-values.yaml
+  project: telinfy
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

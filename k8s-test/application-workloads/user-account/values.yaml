@@ -1,0 +1,119 @@
+# Default values for user-account.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: registry.gitlab.com/greenads-global/ga-user-account-service
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "v2.26.12"
+
+imagePullSecrets:
+  - name: "reg-creds-gitlab"
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext:
+  {}
+  # fsGroup: 2000
+
+securityContext:
+  {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 5000
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production
+    cert-manager.io/acme-challenge-type: http01
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+  hosts:
+    - host: onetest.telinfy.com
+      paths:
+        - path: /gaus(/|$)(.*)
+          pathType: ImplementationSpecific
+  tls:
+    - secretName: onetest-cert-manager-certificate
+      hosts:
+        - onetest.telinfy.com
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 512Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+env:
+  port: 5000
+  access_token_expiry: 3600
+  refresh_token_expiry: 15778476
+  web_token_cache_expiry_seconds: 172800
+  mobile_token_cache_expiry_seconds: 2592000
+  greenads_email: info@greenadsglobal.com
+  christopher_email: christopher@greenadsglobal.com
+  ga_cloudapi_inbound_service_base_url: https://api.prod.telinfy.net/gwis
+  ga_cloudapi_inbound_service_ent_base_url: https://api.ent-grp-1001.telinfy.net/gwis
+  ga_cloudapi_inbound_service_ent_template_url: https://api.ent-grp-1001.telinfy.net/gaca/whatsapp/templates
+  ga_gupshup_inbound_service_base_url: https://api.prod.telinfy.net/gwgp
+  # redis
+  attempts: 5
+  min_delay: 3000
+  times_connected: 3
+  gupshup_partner_base_url: https://partner.gupshup.io/partner
+  gupshup_partner_token_end_url: /account/login
+  # gupshup partner login credentials
+  gupshup_partner_email: midhun@greenadsglobal.com
+  # Enterprise account ids
+  enterprise_accounts: 3c8a0376-99dd-4a6d-a8fc-c96e1d6c177a
+  default_base_url: api.prod.telinfy.net
+  from_mail: dev@telinfy.com
+
+  # log flag
+  log_file_enabled: false
+
+  # initial wallet balance
+  inr_wallet_balance: 10
+  usd_wallet_balance: 3
+
+  # default plan id for singup users
+  default_plan_id: 200
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

@@ -1,0 +1,183 @@
+# Default values for gupshup-inbound.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 4
+
+image:
+  repository: registry.gitlab.com/greenads-global/ga-gupshup-inbound-service
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "v1.43.2"
+
+imagePullSecrets:
+  - name: "reg-creds-gitlab"
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+# fsGroup: 2000
+
+securityContext: {}
+# capabilities:
+#   drop:
+#   - ALL
+# readOnlyRootFilesystem: true
+# runAsNonRoot: true
+# runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 5027
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production
+    cert-manager.io/acme-challenge-type: http01
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+  hosts:
+    - host: onetest.telinfy.com
+      paths:
+        - path: /gwgp(/|$)(.*)
+          pathType: ImplementationSpecific
+  tls:
+    - secretName: onetest-cert-manager-certificate
+      hosts:
+        - onetest.telinfy.com
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 512Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+env:
+  port: 5027
+  access_token_expiry: 3600
+  refresh_token_expiry: 15778476
+  # redis
+  attempts: 5
+  min_delay: 3000
+  times_connected: 3
+
+  campaign_message_sending_interval: 30
+
+  ga_user_account_base_url: http://telinfy-application-user-account.telinfy-application:5000
+  whatsapp_business_end_url: /whatsapp-business/find
+  get_user_end_url: /users
+
+  ga_s3_adapter_base_url: http://telinfy-application-s3-adapter.telinfy-application:5009
+  media_download_end_url: /adapter/s3/whatsapp-media/save
+
+  ga_receiver_profile_base_url: http://telinfy-application-receiver-profile.telinfy-application:5002
+  get_contact_end_url: /contact
+  get_customer_blocked_contacts_end_url: /contacts/customer-blocked
+
+  gupshup_base_url: https://api.gupshup.io/wa/api/v1
+
+  # Gupshup single message end url
+  gupshup_direct_message_end_url: /msg
+
+  firebase_token_threshold_in_days: 60
+
+  ga_cloudapi_service_base_url: http://telinfy-application-cloudapi.telinfy-application:5014
+  send_template_notification_url: /whatsapp/templates/notify
+
+  inbound_receive_prefetch: 200
+  partner_webhook_receive_prefetch: 400
+  save_inbound_message_receive_prefetch: 100
+  save_inbound_status_receive_prefetch: 100
+  save_inbound_billing_receive_prefetch: 60
+  channel_prefetch: 800
+  google_sheets_receive_prefetch: 20
+
+  formatted_webhook_status_updates_channel_ids: "12109663-febe-452f-b6db-83bc0029a9b9,b007af93-01b3-47b0-9818-6e7fa56fdf35,cef8bea8-7483-472c-bab0-b5c2e3bc5a32,061eb8d1-6c92-4bb3-b274-db4524e076f0"
+
+  # kitchen treasures channel id
+  kitchen_treasures_channel_id: ca202f6e-7613-45e0-a102-3f81ca959451
+
+  # kitchen treasures rcs reply template name
+  kitchen_treasures_template_name: field_app_code
+
+  # kitchen treasures rcs message api details
+  kitchen_treasures_rcs_api_base_url: https://sapteleservices.com
+  kitchen_treasures_rcs_api_end_url: /SMS_API/sendsms.php
+  kitchen_treasures_rcs_api_username: intergrowbrands
+  kitchen_treasures_rcs_api_password: 12345
+  kitchen_treasures_rcs_api_sender_name: KTFOOD
+  kitchen_treasures_rcs_api_uc: U
+  kitchen_treasures_rcs_api_route_type: 1
+  kitchen_treasures_rcs_api_tid: 1007441448835007823
+  safg_channel_id: 077d369a-be87-4af5-9a04-470c2ddb17f1
+  safg_template_name: safg_10
+  safg_rcs_api_key: b646b761-cf38-11ef-81ac-e29d2b69142c
+  safg_rcs_api_sender_name: SAFGPL
+  safg_rcs_api_route_type: 1
+  safg_rcs_api_tid: "1707173928113060722"
+
+  campaign_status_fetch_interval: 3
+
+  # futureace channel id
+  futureace_channel_id: 4d6b1ca0-aaa1-49ea-a6b6-8a76c62f7f42
+
+  # log flag
+  log_file_enabled: false
+
+  bhima_whatsapp_business_id: "[b007af93-01b3-47b0-9818-6e7fa56fdf35,0f928382-7f3e-41bf-87ee-c981faf83601]"
+  bhima_sandbox_whatsapp_business_id: "[b007af93-01b3-47b0-9818-6e7fa56fdf35]"
+  auth_url: https://login.microsoftonline.com/
+  auth_endpoint: /oauth2/token
+  tenant_id: b4e15425-2c2c-4455-9649-bd89b6790527
+  grant_type: client_credentials
+  bhima_partner_client_secret_sandbox:
+    valueFrom:
+      secretKeyRef:
+        name: app-creds
+        key: bhima_partner_client_secret_sandbox
+  bhima_partner_client_secret_production:
+    valueFrom:
+      secretKeyRef:
+        name: app-creds
+        key: bhima_partner_client_secret_production
+  bhima_partner_client_id_sandbox: fc8688bc-5889-4cf4-beac-14bf5d5a0aa7
+  bhima_partner_client_id_production: 09f279a9-91ce-44c7-9afe-4e5b6a8166ef
+  bhima_partner_resource_production: https://bhimajewels.operations.dynamics.com/
+  bhima_partner_resource_sandbox: https://bhimatest-uat.sandbox.operations.dynamics.com/
+
+  rabbitmq_connection_pool_size: 10
+  rabbitmq_channel_pool_size: 500
+  custom_button_reply_inspire_channel_id: 061eb8d1-6c92-4bb3-b274-db4524e076f0
+  faziyo_chatbot_trigger_keyword: feedback
+  faziyo_external_api_channel_id: 0d3f51ac-355c-4b93-b872-35cbdfd4df8b
+
+  #Accounts default to LIVE_AGENT mode
+  live_agent_whatsapp_business_ids: "[181bdab7-d407-401c-a4f0-6fa05778addf,43be4930-6e74-4797-b950-30e04b822c02,be2b66ee-5007-41e4-9528-10354ad03024,f3bb4d97-f53f-432c-a101-1acb226dabe6]"
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

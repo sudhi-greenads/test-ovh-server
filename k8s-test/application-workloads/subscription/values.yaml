@@ -1,0 +1,144 @@
+# Default values for subscription.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: registry.gitlab.com/greenads-global/ga-subscription-service
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "v1.35.3"
+
+imagePullSecrets:
+  - name: "reg-creds-gitlab"
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+# fsGroup: 2000
+
+securityContext: {}
+# capabilities:
+#   drop:
+#   - ALL
+# readOnlyRootFilesystem: true
+# runAsNonRoot: true
+# runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 5033
+
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-production
+    cert-manager.io/acme-challenge-type: http01
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/proxy-body-size: "50m"
+  hosts:
+    - host: onetest.telinfy.com
+      paths:
+        - path: /gasp(/|$)(.*)
+          pathType: ImplementationSpecific
+  tls:
+    - secretName: onetest-cert-manager-certificate
+      hosts:
+        - onetest.telinfy.com
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 512Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+env:
+  port: 5033
+  access_token_expiry: 3600
+  refresh_token_expiry: 15778476
+  # redis
+  attempts: 5
+  min_delay: 3000
+  times_connected: 3
+
+  # user account service
+  ga_user_account_base_url: http://telinfy-application-user-account.telinfy-application:5000
+  whatsapp_business_end_url: /whatsapp-business/find
+  get_user_end_url: /users
+  get_api_key_end_url: /users/api-key
+
+  #ga-whatsapp-adpter-service urls
+  ga_s3_adapter_base_url: http://telinfy-application-s3-adapter.telinfy-application:5009
+  media_download_end_url: /adapter/s3/whatsapp-media/save
+
+  s3_aws_arn: arn:aws:s3:::telinfy.greenadsglobal.com
+  aws_bucket_name: telinfy.greenadsglobal.com
+  aws_bucket_region: ap-south-1
+  s3_file_base_url: https://s3.ap-south-1.amazonaws.com/telinfy.greenadsglobal.com
+
+  # conversation message charge
+  custom_0_30_conversation_message_charge: 0.30
+  custom_0_34_conversation_message_charge: 0.34
+  custom_0_35_conversation_message_charge: 0.35
+  custom_0_40_conversation_message_charge: 0.40
+  custom_1_conversation_message_charge: 1
+
+  # Cron jobs
+  subscription_schedule_cron: "30 9 * * *"
+  reconciliation_schedule_cron: "30 7 * * *"
+
+  # initial wallet balance
+  inr_wallet_amount: 10
+  usd_wallet_amount: 3
+
+  # channel prefetch variables
+  campaign_refund_prefetch: 10
+  conversation_refund_prefetch: 2
+
+  # Gupshup partner base url
+  gupshup_partner_base_url: https://partner.gupshup.io/partner/app
+
+  # Currency Conversion Rate
+  currency_conversion_percentage: 0
+
+  # log flag
+  log_file_enabled: false
+
+  # greenads email service
+  email_service_url: "https://5ywz6g.api-in.infobip.com/email/3/send"
+  from_mail: dev@telinfy.com
+
+  # wallet and subscription prefetch and cron
+  wallet_recharge_execute_prefetch: 1
+  subscription_recharge_execute_prefetch: 1
+  subscription_expiry_check_cron: "30 18 * * *"
+  notify_expiring_subscriptions_cron: "30 18 * * *"
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

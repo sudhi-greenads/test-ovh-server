@@ -1,0 +1,150 @@
+# Default values for message-creation.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: registry.gitlab.com/greenads-global/ga-message-creation-service
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "v1.12.4"
+
+imagePullSecrets:
+  - name: "reg-creds-gitlab"
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext: {}
+# fsGroup: 2000
+
+securityContext: {}
+# capabilities:
+#   drop:
+#   - ALL
+# readOnlyRootFilesystem: true
+# runAsNonRoot: true
+# runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 5029
+
+ingress:
+  enabled: false
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 512Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 3
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+env:
+  port: 5029
+
+  access_token_expiry: 3600
+  refresh_token_expiry: 15778476
+
+  ga_cloudapi_inbound_service_base_url: https://api.prod.telinfy.net/gwis/
+
+  # redis
+  attempts: 5
+  min_delay: 3000
+  times_connected: 3
+
+  campaign_message_sending_interval: 30
+
+  ga_user_account_base_url: http://telinfy-application-user-account.telinfy-application:5000
+  whatsapp_business_end_url: /whatsapp-business/find
+  get_user_end_url: /users
+  get_api_key_end_url: /users/api-key
+
+  ga_s3_adapter_base_url: http://telinfy-application-s3-adapter.telinfy-application:5009
+  media_download_end_url: /adapter/s3/whatsapp-media/save
+
+  ga_receiver_profile_base_url: http://telinfy-application-receiver-profile.telinfy-application:5002
+
+  graph_base_url: https://graph.facebook.com/v15.0
+  graph_message_end_url: /messages
+  graph_template_end_url: /message_templates
+  graph_phone_number_end_url: /phone_numbers
+
+  chatbot_session_expiry_time: 3600
+
+  s3_aws_arn: arn:aws:s3:::telinfy.greenadsglobal.com
+  aws_bucket_name: telinfy.greenadsglobal.com
+  aws_bucket_region: ap-south-1
+  s3_file_base_url: https://s3.ap-south-1.amazonaws.com/telinfy.greenadsglobal.com
+
+  intrcity_whatsapp_business_id: 46c9410b-c345-4e86-ae3b-9281045f3d75
+
+  send_messages_to_create_queue_cron: "* * * * *"
+
+  creation_service_instance_id: 0
+
+  campaign_message_chunk: 200
+
+  # Gupshup base url
+  gupshup_base_url: https://api.gupshup.io/sm/api/v1
+
+  # Gupshup partner base url
+  gupshup_partner_base_url: https://partner.gupshup.io/partner
+
+  # Gupshup template end url
+  gupshup_template_end_url: /template/list
+
+  # Cloud enabled
+  cloud_enabled: true
+
+  # Gupshup enabled
+  gupshup_enabled: true
+
+  # RCS enabled
+  rcs_enabled: true
+
+  # Subscription service base url
+  ga_subscription_service_base_url: http://telinfy-application-subscription.telinfy-application:5033
+
+  # Subscription unit charge end url
+  subscription_unit_charge_end_url: /unitcharge
+
+  # Email service url
+  email_service_url: https://5ywz6g.api-in.infobip.com/email/3/send
+  from_mail: dev@telinfy.com
+
+  # Alert mail ids
+  greenads_email: info@greenadsglobal.com
+  christopher_email: christopher@greenadsglobal.com
+  amal_email: amal@dataequinox.com
+
+  # log flag
+  log_file_enabled: false
+
+  # creation copy chunk
+  copy_chunk_size: 100000
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

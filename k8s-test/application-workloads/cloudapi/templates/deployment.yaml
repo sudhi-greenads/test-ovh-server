@@ -1,0 +1,246 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "cloudapi.fullname" . }}
+  labels:
+    {{- include "cloudapi.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "cloudapi.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "cloudapi.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "cloudapi.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: PORT
+              value: "{{ .Values.env.port }}"
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: app-creds
+                  key: jwt_secret
+            - name: DATABASEURL
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: cloudapidburl
+            - name: DATABASE_RO
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: cloudapidburl
+            - name: USER_ACCOUNT_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: useraccountdburl
+            - name: SUBSCRIPTION_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: subscriptiondburl
+            - name: SUBSCRIPTION_DATABASE_RO
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: subscriptiondburl
+            - name: ACCESS_TOKEN_EXPIRY
+              value: "{{ .Values.env.access_token_expiry }}"
+            - name: REFRESH_TOKEN_EXPIRTY
+              value: "{{ .Values.env.refresh_token_expiry }}"
+            - name: AMQP_SERVER_URL
+              valueFrom:
+                secretKeyRef:
+                  name: app-creds
+                  key: amqp_server_url
+            - name: AMQP_SERVER_URL_TELINFY_MAIN
+              valueFrom:
+                secretKeyRef:
+                  name: app-creds
+                  key: amqp_server_url
+            - name: CAMPAIGN_MESSAGE_SENDING_INTERVAL
+              value: "{{ .Values.env.campaign_message_sending_interval }}"
+            - name: GA_USER_ACCOUNT_BASE_URL
+              value: {{ .Values.env.ga_user_account_base_url }}
+            - name: REDIS_URL
+              valueFrom:
+                secretKeyRef:
+                  name: db-creds
+                  key: redisurl
+            - name: ATTEMPTS
+              value: "{{ .Values.env.attempts }}"
+            - name: MIN_DELAY
+              value: "{{ .Values.env.min_delay }}"
+            - name: TIMES_CONNECTED
+              value: "{{ .Values.env.times_connected }}"
+            - name: WHATSAPP_BUSINESS_END_URL
+              value: {{ .Values.env.whatsapp_business_end_url }}
+            - name: GET_USER_END_URL
+              value: {{ .Values.env.get_user_end_url }}
+            - name: GET_API_KEY_END_URL
+              value: {{ .Values.env.get_api_key_end_url }}
+            - name: GET_ALL_USERS
+              value: {{ .Values.env.get_all_users }}
+            - name: GA_S3_ADAPTER_BASE_URL
+              value: {{ .Values.env.ga_s3_adapter_base_url }}
+            - name: MEDIA_DOWNLOAD_END_URL
+              value: {{ .Values.env.media_download_end_url }}
+            - name: GA_CLOUDAPI_INBOUND_SERVICE_BASE_URL
+              value: {{ .Values.env.ga_cloudapi_inbound_service_base_url }}
+            - name: GA_RECEIVER_PROFILE_BASE_URL
+              value: {{ .Values.env.ga_receiver_profile_base_url }}
+            - name: GRAPH_BASE_URL
+              value: {{ .Values.env.graph_base_url }}
+            - name: GRAPH_BASE_URL_WITHOUT_API_VERSION
+              value: {{ .Values.env.graph_base_url_without_api_version }}
+            - name: GRAPH_MESSAGE_END_URL
+              value: {{ .Values.env.graph_message_end_url }}
+            - name: GRAPH_MARKETING_MESSAGE_END_URL
+              value: {{ .Values.env.graph_marketing_message_end_url }}
+            - name: GRAPH_TEMPLATE_END_URL
+              value: {{ .Values.env.graph_template_end_url }}
+            - name: GRAPH_PHONE_NUMBER_END_URL
+              value: {{ .Values.env.graph_phone_number_end_url }}
+            - name: GRAPH_COMMERCE_END_URL
+              value: {{ .Values.env.graph_commerce_end_url }}
+            - name: AWS_ARN
+              value: {{ .Values.env.s3_aws_arn }}
+            - name: AWS_BUCKET_NAME
+              value: {{ .Values.env.aws_bucket_name }}
+            - name: AWS_BUCKET_REGION
+              value: {{ .Values.env.aws_bucket_region }}
+            - name: AWS_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-creds
+                  key: aws_access_key
+            - name: AWS_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: app-creds
+                  key: aws_secret_key
+            - name: EMAIL_SERVICE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: app-creds
+                  key: email_service_url
+            - name: EMAIL_SERVICE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: app-creds
+                  key: email_service_username
+            - name: EMAIL_SERVICE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: app-creds
+                  key: email_service_password
+            - name: S3_FILE_BASE_URL
+              value: {{ .Values.env.s3_file_base_url }}
+            - name: CHATBOT_SESSION_EXPIRY_TIME
+              value: "{{ .Values.env.chatbot_session_expiry_time }}"
+            - name: INTRCITY_WHATSAPP_BUSINESS_ID
+              value: {{ .Values.env.intrcity_whatsapp_business_id }}
+            - name: INSTANCE_NAMESPACE
+              value: {{ .Values.env.instance_namespace }}
+            - name: LOG_FILE_ENABLED
+              value: "{{ .Values.env.log_file_enabled }}"
+            - name: GRAPH_SYSTEM_USER_ACCESS_TOKEN
+              value: {{ .Values.env.graph_system_user_access_token }}
+            - name: CLIENT_ID
+              value: "{{ .Values.env.client_id }}"
+            - name: CLIENT_SECRET
+              value: {{ .Values.env.client_secret }}
+            - name: PINNACLE_API_KEY
+              value: {{ .Values.env.pinnacle_api_key }}
+            - name: PINNACLE_BASE_URL
+              value: {{ .Values.env.pinnacle_base_url }}
+            - name: PINNACLE_CREDIT_LINE_ENDPOINT
+              value: {{ .Values.env.pinnacle_credit_line_endpoint }}
+            - name: PINNACLE_APPLY_CREDITLINE_ENDPOINT
+              value: {{ .Values.env.pinnacle_apply_creditline_endpoint }}
+            - name: GA_SUBSCRIPTION_SERVICE_BASE_URL
+              value: {{ .Values.env.ga_subscription_base_url }}
+            - name: SUBSCRIPTION_UNIT_CHARGE_END_URL
+              value: {{ .Values.env.subscription_unit_charge_end_url }}
+            - name: PINNACLE_EMBEDDED_SIGNUP_CONFIG_ID
+              value: "{{ .Values.env.pinnacle_embedded_signup_config_id }}"
+            - name: PINNACLE_SOLUTION_ID
+              value: "{{ .Values.env.pinnacle_solution_id }}"
+            - name: PINNACLE_BUSINESS_ID
+              value: "{{ .Values.env.pinnacle_business_id }}"
+            - name: GRAPH_USER_ID
+              value: "{{ .Values.env.graph_user_id }}"
+            - name: AGENT_UNASSIGNMENT_CRON
+              value: "{{ .Values.env.agent_unassignment_cron }}"
+            - name: AGENT_UNASSIGNMENT_RESELLER_ID
+              value: "{{ .Values.env.agent_unassignment_reseller_id }}"
+            - name: SESSION_CHECK_RESELLER_ID
+              value: "{{ .Values.env.session_check_reseller_id }}"
+            - name: FROM_MAIL
+              value: "{{ .Values.env.from_mail }}"
+            - name: KALEYRA_BASE_URL
+              value: {{ .Values.env.kaleyra_base_url }}
+            - name: KALEYRA_API_KEY
+              value: {{ .Values.env.kaleyra_api_key }}
+            - name: KALEYRA_SOLUTION_ID
+              value: "{{ .Values.env.kaleyra_solution_id }}"
+            - name: KALEYRA_BM_ID
+              value: "{{ .Values.env.kaleyra_bm_id }}"
+            - name: KALEYRA_WHATSAPP_BUSINESS_ACCOUNT_ID
+              value: "{{ .Values.env.kaleyra_whatsapp_business_account_Id }}"
+            - name: TEMPLATE_CREATION_KEY
+              value: "{{ .Values.env.template_creation_key }}"
+            - name: TEMPLATE_MESSAGE_QUEUE_ACCOUNT_ID
+              value: "{{ .Values.env.template_message_queue_account_id }}"
+            - name: TEMPLATE_MESSAGE_QUEUE_PREFETCH_COUNT
+              value: "{{ .Values.env.template_message_queue_prefetch_count }}"
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          livenessProbe:
+            initialDelaySeconds: 30
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            initialDelaySeconds: 30
+            httpGet:
+              path: /
+              port: http
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
