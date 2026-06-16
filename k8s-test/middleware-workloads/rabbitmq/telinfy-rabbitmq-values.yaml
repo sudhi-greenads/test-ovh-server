@@ -676,7 +676,7 @@ extraSecretsPrependReleaseName: false
 
 ## @param replicaCount Number of RabbitMQ replicas to deploy
 ##
-replicaCount: 3
+replicaCount: 1
 ## @param schedulerName Use an alternate scheduler, e.g. "stork".
 ## ref: https://kubernetes.io/docs/tasks/administer-cluster/configure-multiple-schedulers/
 ##
@@ -829,11 +829,11 @@ containerSecurityContext:
 ##
 resources:
   requests:
-    cpu: 4
-    memory: 18Gi
+    cpu: 250m
+    memory: 512Mi
   limits:
-    cpu: 6
-    memory: 25Gi
+    cpu: "1"
+    memory: 1Gi
 ## Configure RabbitMQ containers' extra options for liveness probe
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes
 ## @param livenessProbe.enabled Enable livenessProbe
