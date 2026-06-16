@@ -1,5 +1,2 @@
 # Ignore secret files
-*secret*
-*.secret
-secrets.yaml
-all-aws-secrets.yaml
+k8s-test/all-aws-secrets.yaml
