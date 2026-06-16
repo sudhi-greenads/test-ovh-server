@@ -829,7 +829,7 @@ resourcesPreset: "micro"
 ##
 resources: {}
   requests:
-    cpu: 250m
+    cpu: 10m
     memory: 512Mi
 ## Configure RabbitMQ containers' extra options for liveness probe
 ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-probes/#configure-probes

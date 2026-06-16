@@ -291,10 +291,10 @@ master:
   ##
   resources:
     requests:
-      cpu: 2
+      cpu: 10m
       memory: 2048Mi
     limits:
-      cpu: 4
+      cpu: 10m
       memory: 4096Mi
   ## Configure Pods Security Context
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
@@ -776,10 +776,10 @@ replica:
   ##
   resources:
     requests:
-      cpu: 2
+      cpu: 10m
       memory: 2048Mi
     limits:
-      cpu: 4
+      cpu: 10m
       memory: 4096Mi
   ## Configure Pods Security Context
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
@@ -1361,10 +1361,10 @@ sentinel:
   ##
   resources:
     requests:
-      cpu: 1
+      cpu: 10m
       memory: 2048Mi
     limits:
-      cpu: 2
+      cpu: 10m
       memory: 4096Mi
   ## Configure Container Security Context
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-pod
@@ -1843,10 +1843,10 @@ metrics:
   ##
   resources:
     requests:
-      cpu: 1
+      cpu: 10m
       memory: 2048Mi
     limits:
-      cpu: 2
+      cpu: 10m
       memory: 4096Mi
   ## @param metrics.podLabels Extra labels for Redis&reg; exporter pods
   ## ref: https://kubernetes.io/docs/concepts/overview/working-with-objects/labels/
@@ -2114,10 +2114,10 @@ volumePermissions:
   ##
   resources:
     requests:
-      cpu: 1
+      cpu: 10m
       memory: 2048Mi
     limits:
-      cpu: 2
+      cpu: 10m
       memory: 4096Mi
   ## Init container Container Security Context
   ## ref: https://kubernetes.io/docs/tasks/configure-pod-container/security-context/#set-the-security-context-for-a-container
@@ -2201,10 +2201,10 @@ kubectl:
   ##
   resources:
     requests:
-      cpu: 1
+      cpu: 10m
       memory: 2048Mi
     limits:
-      cpu: 2
+      cpu: 10m
       memory: 4096Mi
 ## @section useExternalDNS Parameters
 ##
