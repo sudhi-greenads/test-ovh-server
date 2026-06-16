@@ -129,7 +129,7 @@ env:
   # Alert mail ids
   greenads_email: info@greenadsglobal.com
   christopher_email: christopher@greenadsglobal.com
-  amal_email: amal@dataequinox.com
+  amal_email: Sooraj@greenadsglobal.com
 
   # log flag
   log_file_enabled: false
