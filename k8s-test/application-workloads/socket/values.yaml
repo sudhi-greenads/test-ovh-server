@@ -84,10 +84,7 @@ ingresssocket:
     - secretName: onetest-cert-manager-certificate
       hosts:
         - onetest.telinfy.com
-resources:
-  limits:
-    cpu: 500m
-    memory: 512Mi
+resources: {}
   requests:
     cpu: 250m
     memory: 512Mi

@@ -827,10 +827,7 @@ resourcesPreset: "micro"
 ##     cpu: 3
 ##     memory: 1024Mi
 ##
-resources:
-  limits:
-    cpu: 500m
-    memory: 512Mi
+resources: {}
   requests:
     cpu: 250m
     memory: 512Mi
