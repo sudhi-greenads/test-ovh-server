@@ -8,7 +8,7 @@ image:
   repository: registry.gitlab.com/greenads-global/ga-analytics-service
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: "v2.29.5"
+  tag: "v2.29.6.6"
 
 imagePullSecrets:
   - name: "reg-creds-gitlab"
